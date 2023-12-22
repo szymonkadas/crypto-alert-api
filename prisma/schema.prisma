@@ -1,0 +1,18 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  // previewFeatures = ["mongodb"] Deprecated, not needed anymore atleast vsc said so
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id    String  @id @default(auto()) @map("_id") @db.ObjectId
+  title String  @unique
+  body  String
+}
