@@ -1,12 +1,18 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { CryptoModule } from './crypto/crypto.module';
 import { PrismaService } from './prisma.service';
-import { TestPostController } from './test-post/test-post.controller';
-import { TestPostModule } from './test-post/test-post.module';
-import { TestPostService } from './test-post/test-post.service';
 
 @Module({
-  imports: [TestPostModule],
-  controllers: [TestPostController],
-  providers: [PrismaService, TestPostService],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: ['.env'],
+    }),
+    HttpModule,
+    CryptoModule,
+  ],
+  controllers: [],
+  providers: [PrismaService],
 })
 export class AppModule {}
