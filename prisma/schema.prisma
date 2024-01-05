@@ -11,8 +11,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id    String  @id @default(auto()) @map("_id") @db.ObjectId
-  title String  @unique
-  body  String
+// model Post {
+//   id    String  @id @default(auto()) @map("_id") @db.ObjectId
+//   title String  @unique
+//   body  String
+// }
+
+model Cryptocurrency {
+  id   Int   @id @map("_id")
+  name String 
+}
+
+model MapData {
+  id    String   @id @map("_id") 
+  map   Json
 }
