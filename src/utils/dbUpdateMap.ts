@@ -1,7 +1,8 @@
 import { PrismaService } from 'src/prisma.service';
+import { CacheKeys } from './enums';
 
-export default async function updateMap(
-  mapId: string,
+export default async function dbUpdateMap(
+  mapId: CacheKeys,
   mappedResponse: any[],
   prismaService: PrismaService,
 ) {
@@ -10,11 +11,11 @@ export default async function updateMap(
       id: mapId,
     },
     update: {
-      map: JSON.stringify({ map: mappedResponse }),
+      map: JSON.stringify(mappedResponse),
     },
     create: {
       id: mapId,
-      map: JSON.stringify({ map: mappedResponse }),
+      map: JSON.stringify(mappedResponse),
     },
   });
 }

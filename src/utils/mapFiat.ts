@@ -1,13 +1,15 @@
 import { AxiosResponse } from 'axios';
-import { PrismaService } from 'src/prisma.service';
-import updateMap from './updateMap';
 
-export default async function mapFiat(
-  response: AxiosResponse<any, any>,
-  prismaService: PrismaService,
-) {
+type FiatData = {
+  name: string;
+  sign: string;
+  id: number;
+};
+export type FiatMap = Map<string, FiatData>;
+
+export default function mapFiat(response: AxiosResponse<any, any>) {
   const data = response.data.data;
-  const mappedResponse = [];
+  const mappedResponse: [string, FiatData][] = [];
   // map response
   data.forEach((subdata) => {
     mappedResponse.push([
@@ -15,11 +17,5 @@ export default async function mapFiat(
       { name: subdata.name, sign: subdata.sign, id: subdata.id },
     ]);
   });
-  // save in db data
-  try {
-    updateMap('fiat', mappedResponse, prismaService);
-  } catch (e) {
-    console.log('fiat map update failed', e);
-  }
   return mappedResponse;
 }
