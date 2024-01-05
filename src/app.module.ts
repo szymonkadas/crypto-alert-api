@@ -1,7 +1,9 @@
 import { HttpModule } from '@nestjs/axios';
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { CryptoModule } from './crypto/crypto.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CmcController } from './cmc/cmc.controller';
+import { CmcService } from './cmc/cmc.service';
 import { PrismaService } from './prisma.service';
 
 @Module({
@@ -10,9 +12,9 @@ import { PrismaService } from './prisma.service';
       envFilePath: ['.env'],
     }),
     HttpModule,
-    CryptoModule,
+    CacheModule.register(),
   ],
-  controllers: [],
-  providers: [PrismaService],
+  controllers: [CmcController],
+  providers: [PrismaService, CmcService, ConfigService],
 })
 export class AppModule {}
