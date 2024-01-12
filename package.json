@@ -27,6 +27,7 @@
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
     "@prisma/client": "^5.7.0",
+    "@sendgrid/mail": "^8.1.0",
     "axios": "^1.6.3",
     "mongodb": "^6.3.0",
     "reflect-metadata": "^0.1.13",
