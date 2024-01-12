@@ -8,7 +8,7 @@ import {
   Inject,
   Query,
 } from '@nestjs/common';
-import { CacheKeys, DbEnumKeys } from 'src/utils/enums';
+import { DbMapEnumKeys, PrismaMapModels } from 'src/utils/enums';
 import { CmcService } from './cmc.service';
 @Controller('cmc')
 export class CmcController {
@@ -28,8 +28,8 @@ export class CmcController {
 
   // updating basic data endpoints:
   @Get('/update/db_map')
-  async updateDbMap(@Query('map_type') enumKey: DbEnumKeys) {
-    if (Object.keys(DbEnumKeys).includes(enumKey)) {
+  async updateDbMap(@Query('map_type') enumKey: DbMapEnumKeys) {
+    if (Object.keys(DbMapEnumKeys).includes(enumKey)) {
       return await this.cmcService.updateDbMap(enumKey);
     } else {
       throw new HttpException('Incorrect map_type', HttpStatus.BAD_REQUEST);
@@ -37,9 +37,11 @@ export class CmcController {
   }
 
   @Get('/update/cache')
-  async updateCache(@Query('cache_key') enumKey: CacheKeys) {
-    if (Object.keys(CacheKeys).includes(enumKey)) {
-      const response = await this.cmcService.cacheMapFromDb(CacheKeys[enumKey]);
+  async updateCache(@Query('model_name') enumKey: PrismaMapModels) {
+    if (Object.keys(PrismaMapModels).includes(enumKey)) {
+      const response = await this.cmcService.cacheMapFromDb(
+        PrismaMapModels[enumKey],
+      );
       if (response) {
         return response;
       } else {

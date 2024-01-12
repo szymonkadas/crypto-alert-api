@@ -4,11 +4,23 @@ import { CacheStore, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { map } from 'rxjs';
 import { PrismaService } from 'src/prisma.service';
-import dbUpdateMap from 'src/utils/dbUpdateMap';
-import { CacheKeys, DbEnumKeys, MapEndpoints } from 'src/utils/enums';
-import mapCryptocurrencies from 'src/utils/mapCryptocurrencies';
-import mapFiat from 'src/utils/mapFiat';
-import mapQuotesData from 'src/utils/mapQuotesData';
+import {
+  CacheKeys,
+  DbMapEnumKeys,
+  MapEndpoints,
+  PrismaMapModels,
+} from 'src/utils/enums';
+import mapData from 'src/utils/mapData';
+import {
+  CryptoMapRecord,
+  cryptoSubMap,
+} from 'src/utils/mapSubfunctions/cryptoSubMap';
+import {
+  FiatMapRecord,
+  fiatSubMap,
+} from 'src/utils/mapSubfunctions/fiatSubMap';
+import { quotesSubMap } from 'src/utils/mapSubfunctions/quotesSubMap';
+import updateDbMapController from 'src/utils/updateDbMapController';
 @Injectable()
 export class CmcService {
   constructor(
@@ -42,7 +54,10 @@ export class CmcService {
         .pipe(
           map(async (response) => {
             // map data
-            const mappedResponse = mapQuotesData(response);
+            const mappedResponse = mapData(
+              Object.values(response.data.data),
+              quotesSubMap,
+            );
             // save data in cache
             try {
               this.cacheManager.set(
@@ -86,7 +101,7 @@ export class CmcService {
   }
 
   // updates map in db. Cron maybe?
-  async updateDbMap(enumKey: DbEnumKeys) {
+  async updateDbMap(enumKey: DbMapEnumKeys) {
     const headers = {
       'X-CMC_PRO_API_KEY': this.configService.get('TEST_CRYPTO_API_KEY'),
     };
@@ -103,21 +118,21 @@ export class CmcService {
         .pipe(
           map(async (response) => {
             // map data
-            const mappedResponse =
-              enumKey === DbEnumKeys.Crypto
-                ? await mapCryptocurrencies(response)
-                : await mapFiat(response);
-            // save in db data
+            const mappedResponse: FiatMapRecord | CryptoMapRecord =
+              enumKey === DbMapEnumKeys.Crypto
+                ? await mapData(response.data.data, cryptoSubMap)
+                : await mapData(response.data.data, fiatSubMap);
+            // save data in db
             try {
-              await dbUpdateMap(
+              await updateDbMapController(
                 CacheKeys[enumKey],
-                mappedResponse,
+                response,
                 this.prisma,
               );
             } catch (e) {
               console.log(`${CacheKeys[enumKey]} db update failed`, e);
             }
-            // save in cache data
+            // save data in cache
             try {
               this.cacheManager.set(
                 CacheKeys[enumKey],
@@ -138,19 +153,13 @@ export class CmcService {
     }
   }
 
-  // fetching map from db and caching it. (use on init?) Won't return map
-  async cacheMapFromDb(mapId: CacheKeys) {
+  // fetching map from db in it's raw form (not mapped) and caching it. (use on init?)
+  async cacheMapFromDb(mapId: PrismaMapModels) {
     try {
-      const newResponse = await this.prisma.mapData.findFirst({
-        where: {
-          id: mapId,
-        },
-      });
-      // since Json is string such assertion is ok. JSON.stringify would mess real js typing
-      const mapData = new Map(JSON.parse(newResponse.map as string));
-      // save mapData in cache
-      this.cacheManager.set(mapId, mapData, 1000000);
-      return newResponse.map;
+      const fetchedData = await this.prisma[mapId].findMany({});
+      // save mapData in cache for 1000 seconds, prolly will change lifespan
+      this.cacheManager.set(mapId, fetchedData, 1000000);
+      return fetchedData;
     } catch (error) {
       console.log(error);
       return false;

@@ -9,13 +9,20 @@ export enum MapEndpoints {
   Crypto = '/v1/cryptocurrency/map',
 }
 
-export enum EnumKeys {
-  QuotesData = 'QuotesData',
+// EnumKeys but without QuotesData, used for MapEndpoints accessing and PrismaModels, so it's db map related data.
+export enum DbMapEnumKeys {
   Fiat = 'Fiat',
   Crypto = 'Crypto',
 }
 
-export enum DbEnumKeys {
+export enum PrismaMapModels {
+  Fiat = 'FiatData',
+  Crypto = 'CryptoData',
+}
+
+// default enum keys, can be used to access CacheKeys.
+export enum EnumKeys {
+  QuotesData = 'QuotesData',
   Fiat = 'Fiat',
   Crypto = 'Crypto',
 }
