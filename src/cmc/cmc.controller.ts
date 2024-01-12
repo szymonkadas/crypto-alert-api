@@ -58,14 +58,15 @@ export class CmcController {
   // Possible endpoints in future:
 
   // Convert an amount of one cryptocurrency or fiat currency into one or more different currencies utilizing the latest market rate for each currency. You may optionally pass a historical timestamp as time to convert values based on historical rates
-  // @Get('/price_convert')
-  // async convertPrice(
-  //   @Query('amount') amount: number,
-  //   @Query('currencyName') currencyName: string,
-  //   @Query('convert_id') currencyIdList: string,
-  // ) {
-  //   // to be implemented if needed.
-  //   const id = 1;
-  //   return await this.cmcService.convertPrice(amount, id, currencyIdList);
-  // }
+  @Get('/price_convert')
+  async convertPrice(
+    @Query('amount') amount: number,
+    @Query('currencyName') currencyName: string,
+    @Query('convert_id') currencyIdList: string,
+  ) {
+    // logic here to be implemented if this method will be useful (it's utility is already provided in getQuotesData), for now id = 1 to test if it works. It does
+    // currencyName => currencyId (crypto or fiat)
+    const id = 2781;
+    return await this.cmcService.convertPrice(amount, id, currencyIdList);
+  }
 }

@@ -92,10 +92,17 @@ export class CmcService {
       convert_id,
     };
     // fetch
-    const response = await this.httpService.get(
-      `${this.configService.get('TEST_CRYPTO_API_URL')}${endpoint}`,
-      { headers, params },
-    );
+    const response = await this.httpService
+      .get(`${this.configService.get('TEST_CRYPTO_API_URL')}${endpoint}`, {
+        headers,
+        params,
+      })
+      .pipe(
+        map(async (response) => {
+          const data = response.data.data;
+          return data;
+        }),
+      );
 
     return response;
   }
