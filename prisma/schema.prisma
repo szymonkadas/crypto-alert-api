@@ -11,8 +11,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id    String  @id @default(auto()) @map("_id") @db.ObjectId
-  title String  @unique
-  body  String
+model Cryptocurrency {
+  id   Int   @id @map("_id")
+  name String 
+}
+
+model  FiatData {
+  id      Int @id @map("_id")
+  symbol  String  
+  name    String
+  sign    String
+}
+
+model CryptoData{
+  id    Int     @id @map("_id")
+  name  String  
 }
