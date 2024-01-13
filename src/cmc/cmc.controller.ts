@@ -8,7 +8,7 @@ import {
   Inject,
   Query,
 } from '@nestjs/common';
-import { DbMapEnumKeys, PrismaMapModels } from 'src/utils/enums';
+import { DbMapEnumKeys, PrismaMapModels } from 'src/utils/cmc/enums';
 import { CmcService } from './cmc.service';
 @Controller('cmc')
 export class CmcController {

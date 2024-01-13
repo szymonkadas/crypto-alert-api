@@ -9,18 +9,18 @@ import {
   DbMapEnumKeys,
   MapEndpoints,
   PrismaMapModels,
-} from 'src/utils/enums';
-import mapData from 'src/utils/mapData';
+} from 'src/utils/cmc/enums';
+import mapData from 'src/utils/cmc/mapData';
 import {
   CryptoMapRecord,
   cryptoSubMap,
-} from 'src/utils/mapSubfunctions/cryptoSubMap';
+} from 'src/utils/cmc/mapSubfunctions/cryptoSubMap';
 import {
   FiatMapRecord,
   fiatSubMap,
-} from 'src/utils/mapSubfunctions/fiatSubMap';
-import { quotesSubMap } from 'src/utils/mapSubfunctions/quotesSubMap';
-import updateDbMapController from 'src/utils/updateDbMapController';
+} from 'src/utils/cmc/mapSubfunctions/fiatSubMap';
+import { quotesSubMap } from 'src/utils/cmc/mapSubfunctions/quotesSubMap';
+import updateDbMapController from 'src/utils/cmc/updateDbMapController';
 @Injectable()
 export class CmcService {
   constructor(

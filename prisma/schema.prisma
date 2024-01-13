@@ -27,3 +27,15 @@ model CryptoData{
   id    Int     @id @map("_id")
   name  String  
 }
+
+// dunno 'bout the password
+model User {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  name  String
+  email String 
+  // alerts AlertsModel
+}
+
+// model Alert {
+
+// }

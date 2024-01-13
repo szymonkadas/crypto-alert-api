@@ -8,6 +8,8 @@ import { CmcService } from './cmc/cmc.service';
 import { PrismaService } from './prisma.service';
 import { SendgridController } from './sendgrid/sendgrid.controller';
 import { SendgridService } from './sendgrid/sendgrid.service';
+import { MessageTemplateService } from './message-template/message-template.service';
+import { MessageTemplateController } from './message-template/message-template.controller';
 
 @Module({
   imports: [
@@ -17,13 +19,14 @@ import { SendgridService } from './sendgrid/sendgrid.service';
     HttpModule,
     CacheModule.register(),
   ],
-  controllers: [CmcController, SendgridController],
+  controllers: [CmcController, SendgridController, MessageTemplateController],
   providers: [
     PrismaService,
     CmcService,
     ConfigService,
     SendgridService,
     MailService,
+    MessageTemplateService,
   ],
 })
 export class AppModule {}

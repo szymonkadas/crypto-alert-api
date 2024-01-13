@@ -4,8 +4,11 @@ import { CacheStore, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '@sendgrid/mail';
 import { PrismaService } from 'src/prisma.service';
+import createAlert from 'src/utils/sendgrid/createAlert';
+import deleteAlert from 'src/utils/sendgrid/deleteAlert';
 @Injectable()
 export class SendgridService {
+  senderMail: string;
   constructor(
     private configService: ConfigService,
     private httpService: HttpService,
@@ -14,13 +17,58 @@ export class SendgridService {
     private mailService: MailService,
   ) {
     this.mailService.setApiKey(this.configService.get('SENDGRID_API_KEY'));
+    this.senderMail = this.configService.get('SENDER_MAIL');
   }
 
-  async sendMessage(msg: sendgridMessage) {
+  // prolly will take crypto name and price info as arguments i suppose?
+  async sendCreateAlert(userEmail: string, msg: sendgridMessageConfig) {
+    const message = {
+      from: this.senderMail,
+      ...msg,
+    };
+    // save new alert in db
+    createAlert();
+    // send notification
+    return this.sendMail(userEmail, message, 'CREATION');
+  }
+
+  async sendAlertPriceReached(userEmail: string, msg: sendgridMessageConfig) {
+    const message = {
+      ...msg,
+    };
+
+    // send notification
+    return this.sendMail(userEmail, message, 'ALERT');
+  }
+
+  async deletionOfAlert(
+    userEmail: string,
+    alertId: number,
+    msg: sendgridMessageConfig,
+  ) {
+    const message = {
+      ...msg,
+    };
+    // delete alert from db
+    deleteAlert(alertId);
+    // send notification
+    return this.sendMail(userEmail, message, 'DELETION');
+  }
+
+  async sendMail(
+    userEmail: string,
+    msg: sendgridMessageConfig,
+    description?: string,
+  ) {
+    const message: sendgridMessage = {
+      from: this.senderMail,
+      to: userEmail,
+      ...msg,
+    };
     return await this.mailService
-      .send(msg)
+      .send(message)
       .then(() => {
-        return `SENT a message: ${msg.subject}`;
+        return `SENT the ${description} message: ${msg.subject}`;
       })
       .catch((error) => {
         const errorMessage = `Failed to send mail message ${msg.subject}, ERROR: ${error}`;
@@ -30,10 +78,13 @@ export class SendgridService {
   }
 }
 
-export type sendgridMessage = {
-  to: string;
-  from: string;
+export type sendgridMessageConfig = {
   subject: string;
   text: string;
   html: string;
+};
+
+type sendgridMessage = sendgridMessageConfig & {
+  to: string;
+  from: string;
 };
