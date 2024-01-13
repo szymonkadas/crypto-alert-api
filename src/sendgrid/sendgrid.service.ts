@@ -6,6 +6,8 @@ import { MailService } from '@sendgrid/mail';
 import { PrismaService } from 'src/prisma.service';
 import createAlert from 'src/utils/sendgrid/createAlert';
 import deleteAlert from 'src/utils/sendgrid/deleteAlert';
+import MessageTemplate from 'src/utils/sendgrid/MessageTemplate';
+import verifyUser from 'src/utils/user/verifyUser';
 @Injectable()
 export class SendgridService {
   senderMail: string;
@@ -21,38 +23,50 @@ export class SendgridService {
   }
 
   // prolly will take crypto name and price info as arguments i suppose?
-  async sendCreateAlert(userEmail: string, msg: sendgridMessageConfig) {
-    const message = {
-      from: this.senderMail,
-      ...msg,
-    };
+  async sendCreateAlert(userEmail: string, alertData: { id: number }) {
+    verifyUser(userEmail);
     // save new alert in db
     createAlert();
+    // create message
+    const message = new MessageTemplate(
+      `ALERT: {alert.crypto}`,
+      'CREATED: {alert.crypto} alert with price set to {alert.price}{alert.currency} has been created!',
+    );
     // send notification
-    return this.sendMail(userEmail, message, 'CREATION');
+    return this.sendMail(
+      userEmail,
+      message.formatToMessageConfig(),
+      'CREATION',
+    );
   }
 
-  async sendAlertPriceReached(userEmail: string, msg: sendgridMessageConfig) {
-    const message = {
-      ...msg,
-    };
-
+  async sendAlertPriceReached(userEmail: string, alertId: number) {
+    verifyUser(userEmail);
+    // fetch alert from db OR take it as argument, gotta decide
+    // create message
+    const message = new MessageTemplate(
+      `ALERT: {alert.crypto}`,
+      'ALERT: {alert.crypto} has reached {alert.price}{alert.currency}!',
+    );
     // send notification
-    return this.sendMail(userEmail, message, 'ALERT');
+    return this.sendMail(userEmail, message.formatToMessageConfig(), 'ALERT');
   }
 
-  async deletionOfAlert(
-    userEmail: string,
-    alertId: number,
-    msg: sendgridMessageConfig,
-  ) {
-    const message = {
-      ...msg,
-    };
+  async deletionOfAlert(userEmail: string, alertId: number) {
+    verifyUser(userEmail);
     // delete alert from db
     deleteAlert(alertId);
+    // create message
+    const message = new MessageTemplate(
+      `ALERT: {alert.crypto}`,
+      'DELETED: {alert.crypto} alert with price set to {alert.price}{alert.currency} has been deleted!',
+    );
     // send notification
-    return this.sendMail(userEmail, message, 'DELETION');
+    return this.sendMail(
+      userEmail,
+      message.formatToMessageConfig(),
+      'DELETION',
+    );
   }
 
   async sendMail(
@@ -68,7 +82,7 @@ export class SendgridService {
     return await this.mailService
       .send(message)
       .then(() => {
-        return `SENT the ${description} message: ${msg.subject}`;
+        return `SENT the ${description || 'custom'} message: ${msg.subject}`;
       })
       .catch((error) => {
         const errorMessage = `Failed to send mail message ${msg.subject}, ERROR: ${error}`;

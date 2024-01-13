@@ -1,47 +1,42 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { SendgridService, sendgridMessageConfig } from './sendgrid.service';
 @Controller('alerts')
 export class SendgridController {
   constructor(private readonly sendgridService: SendgridService) {}
 
   // Sending email
-  @Post('/send')
+  @Post('/:userEmail/send')
   async sendMail(
-    @Param() userEmail: string,
+    @Param('userEmail') userEmail: string,
     @Body() message: sendgridMessageConfig,
   ): Promise<string> {
     return await this.sendgridService.sendMail(userEmail, message);
   }
 
   // sending alert mail about created notification
-  @Post('/create')
+  @Post('/:userEmail/create')
   async sendCreateAlert(
-    @Param() userEmail: string,
-    @Body() message: sendgridMessageConfig,
+    @Param('userEmail') userEmail,
+    @Body() alertData: { id: number },
   ) {
-    return await this.sendgridService.sendCreateAlert(userEmail, message);
+    return await this.sendgridService.sendCreateAlert(userEmail, alertData);
   }
 
   // sending price reached alert mail
-  @Post('/alert')
+  @Get('/:userEmail/alert/:alertId')
   async sendAlertPriceReached(
-    @Param() userEmail: string,
-    @Body() message: sendgridMessageConfig,
+    @Param('userEmail') userEmail: string,
+    @Param('alertId') alertId: number,
   ) {
-    return await this.sendgridService.sendAlertPriceReached(userEmail, message);
+    return await this.sendgridService.sendAlertPriceReached(userEmail, alertId);
   }
 
   // sending delete alert mail
-  @Post('/delete')
+  @Delete('/:userEmail/delete/:alertId')
   async deletionOfAlert(
-    @Param() userEmail: string,
-    @Param() alertId: number,
-    @Body() message: sendgridMessageConfig,
+    @Param('userEmail') userEmail: string,
+    @Param('alertId') alertId: number,
   ) {
-    return await this.sendgridService.deletionOfAlert(
-      userEmail,
-      alertId,
-      message,
-    );
+    return await this.sendgridService.deletionOfAlert(userEmail, alertId);
   }
 }
