@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { SendgridService, sendgridMessageConfig } from './sendgrid.service';
-@Controller('alerts')
+@Controller('mail')
 export class SendgridController {
   constructor(private readonly sendgridService: SendgridService) {}
 

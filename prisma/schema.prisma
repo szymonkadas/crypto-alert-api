@@ -11,32 +11,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// I dunno if it's not reundant, we've got CryptoData serving as a map, but what is cryptocurrency for?
 model Cryptocurrency {
   id   Int   @id @map("_id")
   name String 
 }
 
+// Storing map of fiat
 model  FiatData {
-  id      Int @id @map("_id")
+  id      Int   @id @map("_id")
   symbol  String  
   name    String
   sign    String
+
+  // not sure if it should be here but it's necessary for Alert 1:n relation.
+  alerts Alert[]
 }
 
+// storing map of crypto
 model CryptoData{
   id    Int     @id @map("_id")
   name  String  
+
+  alerts Alert[]
 }
 
-// dunno 'bout the password
+// todo: password hashing + sessions / jwt
 model User {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  name  String
-  email String 
-  // alerts AlertsModel
+  id    String  @id @default(auto()) @map("_id") @db.ObjectId
+  name  String  @unique 
+  email String  @unique 
+  // hash  String
+  
+  alerts Alert[]
 }
 
-// model Alert {
-//   id Int @id @map("_id")
-// todo: implement alertModel
-// }
+model Alert {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  price         Float 
+  currencyId    Int
+  currencyData  FiatData   @relation(fields: [currencyId], references: [id])
+  cryptoId      Int
+  cryptoData    CryptoData  @relation(fields: [cryptoId], references: [id])
+  createdAt     DateTime  @default(now())
+  userEmail     String
+  user          User      @relation(fields: [userEmail], references: [email])
+
+  @@unique([price, currencyId, cryptoId, userEmail])
+}
