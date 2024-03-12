@@ -11,5 +11,6 @@ import { SendgridService } from './sendgrid.service';
   imports: [CacheModule.register(), HttpModule],
   controllers: [SendgridController],
   providers: [SendgridService, ConfigService, PrismaService, MailService],
+  exports: [SendgridService],
 })
 export class SendgridModule {}

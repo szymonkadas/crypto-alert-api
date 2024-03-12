@@ -13,14 +13,14 @@ export class SendgridController {
     return await this.sendgridService.sendMail(userEmail, message);
   }
 
-  // sending alert mail about created notification
-  @Post('/:userEmail/create')
-  async sendCreateAlert(
-    @Param('userEmail') userEmail,
-    @Body() alertData: { id: number },
-  ) {
-    return await this.sendgridService.sendCreateAlert(userEmail, alertData);
-  }
+  // sending alert mail about created notification -> for testing purposes => service used only in alerts controller.
+  // @Post('/:userEmail/create')
+  // async sendCreateAlert(
+  //   @Param('userEmail') userEmail,
+  //   @Body() alertData: { price: number; currency: string; crypto: string },
+  // ) {
+  //   return await this.sendgridService.sendCreateAlert(userEmail, alertData);
+  // }
 
   // sending price reached alert mail
   @Get('/:userEmail/alert/:alertId')
