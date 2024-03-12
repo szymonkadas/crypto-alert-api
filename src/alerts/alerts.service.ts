@@ -3,7 +3,6 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { Alert } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from 'src/prisma.service';
 import { CreateAlertDto } from './dto/createAlert.dto';
@@ -12,24 +11,27 @@ import { CreateAlertDto } from './dto/createAlert.dto';
 export class AlertsService {
   constructor(private prisma: PrismaService) {}
 
-  create(userEmail: string, data: CreateAlertDto): Promise<Alert> {
+  create(userEmail: string, data: CreateAlertDto) {
     return this.prisma.alert
       .create({
         data: {
           userEmail,
           ...data,
         },
+        include: {
+          user: true,
+          cryptoData: true,
+          currencyData: true,
+        },
       })
       .catch((error) => {
-        if (error instanceof PrismaClientKnownRequestError) {
-          if (error.code === 'P2002') {
-            throw new ConflictException('Alert already exists');
-          } else {
-            throw new InternalServerErrorException();
-          }
-        } else {
-          throw error;
+        if (
+          error instanceof PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          throw new ConflictException('Alert already exists');
         }
+        throw new InternalServerErrorException();
       });
   }
 }

@@ -23,14 +23,17 @@ export class SendgridService {
   }
 
   // prolly will take crypto name and price info as arguments i suppose?
-  async sendCreateAlert(userEmail: string, alertData: { id: number }) {
+  async sendCreateAlert(
+    userEmail: string,
+    alertData: { price: number; currency: string; crypto: string },
+  ) {
     verifyUser(userEmail);
     // save new alert in db
     createAlert();
     // create message
     const message = new MessageTemplate(
-      `ALERT: {alert.crypto}`,
-      'CREATED: {alert.crypto} alert with price set to {alert.price}{alert.currency} has been created!',
+      `ALERT: ${alertData.crypto}`,
+      `CREATED: ${alertData.crypto} alert with price set to ${alertData.price}${alertData.currency} has been created!`,
     );
     // send notification
     return this.sendMail(
