@@ -20,54 +20,60 @@ export class AlertsController {
     private AlertsService: AlertsService,
     private SendgridService: SendgridService,
   ) {}
+
+  @Get(':userEmail')
+  async get(
+    @Param('userEmail') userEmail: string,
+  ): Promise<GetUserAlertsDto[]> {
+    await this.validateEmail(userEmail);
+    try {
+      const result = await this.AlertsService.get(userEmail);
+      return result;
+    } catch (error) {
+      await this.handleException(error);
+    }
+  }
+
   @Post(':userEmail/create')
   async create(
     @Param('userEmail') userEmail: string | null,
     @Body() dto: CreateAlertDto,
   ) {
+    await this.validateEmail(userEmail);
+    const result = await this.AlertsService.create(userEmail, dto).catch(
+      this.handleException,
+    );
+    await this.sendEmailIfAlertCreated(result);
+    return result;
+  }
+
+  // Validates whether the user email is valid
+  async validateEmail(userEmail: string | null) {
     if (!isEmail(userEmail)) {
       throw new BadRequestException(
         undefined,
         'provided userEmail must be valid email address',
       );
     }
-    const result = await this.AlertsService.create(userEmail, dto).catch(
-      (error) => {
-        if (error instanceof HttpException) {
-          throw error;
-        }
-        throw new InternalServerErrorException(
-          undefined,
-          error.message || 'Internal server error',
-        );
-      },
+  }
+
+  // Handles exceptions according to their type
+  async handleException(error: any) {
+    if (error instanceof HttpException) {
+      throw error;
+    }
+    throw new InternalServerErrorException(
+      undefined,
+      error.message || 'Internal server error',
     );
+  }
+
+  async sendEmailIfAlertCreated(result: any) {
     if (result)
       await this.SendgridService.sendCreateAlert(result.userEmail, {
         price: result.price,
         currency: result.currencyData.symbol,
         crypto: result.cryptoData.name,
       });
-    return result;
-  }
-  @Get(':userEmail')
-  async get(
-    @Param('userEmail') userEmail: string,
-  ): Promise<GetUserAlertsDto[]> {
-    if (!isEmail(userEmail)) {
-      throw new BadRequestException('userEmail must be a valid email address');
-    }
-    try {
-      const result = await this.AlertsService.get(userEmail);
-      return result;
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException(
-        undefined,
-        error.message || 'Internal server error',
-      );
-    }
   }
 }
