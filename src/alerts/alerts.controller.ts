@@ -28,7 +28,7 @@ export class AlertsController {
     if (!isEmail(userEmail)) {
       throw new BadRequestException(
         undefined,
-        'userEmail must be a valid email address',
+        'provided userEmail must be valid email address',
       );
     }
     const result = await this.AlertsService.create(userEmail, dto).catch(
