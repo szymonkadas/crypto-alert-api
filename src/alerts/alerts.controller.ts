@@ -40,9 +40,13 @@ export class AlertsController {
     @Body() dto: CreateAlertDto,
   ) {
     await this.validateEmail(userEmail);
-    const result = await this.AlertsService.create(userEmail, dto).catch(
-      this.handleException,
-    );
+    let result: undefined | GetUserAlertsDto;
+    try {
+      result = await this.AlertsService.create(userEmail, dto);
+    } catch (error) {
+      this.handleException(error);
+    }
+
     await this.sendEmailIfAlertCreated(result);
     return result;
   }
@@ -57,8 +61,8 @@ export class AlertsController {
     }
   }
 
-  // Handles exceptions according to their type
-  async handleException(error: any) {
+  // Handles exceptions according to their type, and hence terminates controller execution
+  async handleException<t extends HttpException | Error>(error: t) {
     if (error instanceof HttpException) {
       throw error;
     }
@@ -68,12 +72,12 @@ export class AlertsController {
     );
   }
 
-  async sendEmailIfAlertCreated(result: any) {
+  async sendEmailIfAlertCreated(result: GetUserAlertsDto) {
     if (result)
-      await this.SendgridService.sendCreateAlert(result.userEmail, {
+      await this.SendgridService.sendCreateAlert(result.email, {
         price: result.price,
-        currency: result.currencyData.symbol,
-        crypto: result.cryptoData.name,
+        currency: result.currency,
+        crypto: result.crypto,
       });
   }
 }

@@ -25,6 +25,7 @@ export class AlertsService {
           currencyData: true,
         },
       })
+      .then((data) => convertPrismaAlertToDto(data))
       .catch((error) => {
         if (
           error instanceof PrismaClientKnownRequestError &&
