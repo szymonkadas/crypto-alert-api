@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   InternalServerErrorException,
@@ -22,15 +23,13 @@ export class AlertsController {
   ) {}
 
   @Get(':userEmail')
-  async get(
-    @Param('userEmail') userEmail: string,
-  ): Promise<GetUserAlertsDto[]> {
+  async get(@Param('userEmail') userEmail: string) {
     await this.validateEmail(userEmail);
     try {
       const result = await this.AlertsService.get(userEmail);
       return result;
     } catch (error) {
-      await this.handleException(error);
+      return await this.handleException(error);
     }
   }
 
@@ -44,11 +43,24 @@ export class AlertsController {
     try {
       result = await this.AlertsService.create(userEmail, dto);
     } catch (error) {
-      this.handleException(error);
+      return this.handleException(error);
     }
 
     await this.sendEmailIfAlertCreated(result);
     return result;
+  }
+
+  @Delete('/:id')
+  async delete(@Param('id') id: string) {
+    let result: undefined | GetUserAlertsDto;
+    try {
+      result = await this.AlertsService.delete(id);
+    } catch (error) {
+      return this.handleException(error);
+    }
+
+    await this.sendEmailIfAlertDeleted(result);
+    return { success: true };
   }
 
   // Validates whether the user email is valid
@@ -61,12 +73,12 @@ export class AlertsController {
     }
   }
 
-  // Handles exceptions according to their type, and hence terminates controller execution
+  // Handles exceptions according to their type.
   async handleException<t extends HttpException | Error>(error: t) {
     if (error instanceof HttpException) {
-      throw error;
+      return error;
     }
-    throw new InternalServerErrorException(
+    return new InternalServerErrorException(
       undefined,
       error.message || 'Internal server error',
     );
@@ -79,5 +91,10 @@ export class AlertsController {
         currency: result.currency,
         crypto: result.crypto,
       });
+  }
+
+  async sendEmailIfAlertDeleted(result: GetUserAlertsDto) {
+    if (result)
+      await this.SendgridService.deletionOfAlert(result.email, result.id);
   }
 }

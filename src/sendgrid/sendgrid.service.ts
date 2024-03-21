@@ -4,8 +4,6 @@ import { CacheStore, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '@sendgrid/mail';
 import { PrismaService } from 'src/prisma.service';
-import createAlert from 'src/utils/sendgrid/createAlert';
-import deleteAlert from 'src/utils/sendgrid/deleteAlert';
 import MessageTemplate from 'src/utils/sendgrid/MessageTemplate';
 import verifyUser from 'src/utils/user/verifyUser';
 @Injectable()
@@ -28,8 +26,6 @@ export class SendgridService {
     alertData: { price: number; currency: string; crypto: string },
   ) {
     verifyUser(userEmail);
-    // save new alert in db
-    createAlert();
     // create message
     const message = new MessageTemplate(
       `ALERT: ${alertData.crypto}`,
@@ -43,7 +39,7 @@ export class SendgridService {
     );
   }
 
-  async sendAlertPriceReached(userEmail: string, alertId: number) {
+  async sendAlertPriceReached(userEmail: string, alertId: string) {
     verifyUser(userEmail);
     // fetch alert from db OR take it as argument, gotta decide
     // create message
@@ -55,10 +51,8 @@ export class SendgridService {
     return this.sendMail(userEmail, message.formatToMessageConfig(), 'ALERT');
   }
 
-  async deletionOfAlert(userEmail: string, alertId: number) {
+  async deletionOfAlert(userEmail: string, alertId: string) {
     verifyUser(userEmail);
-    // delete alert from db
-    deleteAlert(alertId);
     // create message
     const message = new MessageTemplate(
       `ALERT: {alert.crypto}`,

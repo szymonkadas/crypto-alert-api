@@ -14,28 +14,28 @@ export class SendgridController {
   }
 
   // sending alert mail about created notification -> for testing purposes => service used only in alerts controller.
-  // @Post('/:userEmail/create')
-  // async sendCreateAlert(
-  //   @Param('userEmail') userEmail,
-  //   @Body() alertData: { price: number; currency: string; crypto: string },
-  // ) {
-  //   return await this.sendgridService.sendCreateAlert(userEmail, alertData);
-  // }
+  @Post('/:userEmail/create')
+  async sendCreateAlert(
+    @Param('userEmail') userEmail,
+    @Body() alertData: { price: number; currency: string; crypto: string },
+  ) {
+    return await this.sendgridService.sendCreateAlert(userEmail, alertData);
+  }
 
   // sending price reached alert mail
   @Get('/:userEmail/alert/:alertId')
   async sendAlertPriceReached(
     @Param('userEmail') userEmail: string,
-    @Param('alertId') alertId: number,
+    @Param('alertId') alertId: string,
   ) {
     return await this.sendgridService.sendAlertPriceReached(userEmail, alertId);
   }
 
-  // sending delete alert mail
+  // sending delete alert mail => for testing purposes used only in alerts controller
   @Delete('/:userEmail/delete/:alertId')
   async deletionOfAlert(
     @Param('userEmail') userEmail: string,
-    @Param('alertId') alertId: number,
+    @Param('alertId') alertId: string,
   ) {
     return await this.sendgridService.deletionOfAlert(userEmail, alertId);
   }

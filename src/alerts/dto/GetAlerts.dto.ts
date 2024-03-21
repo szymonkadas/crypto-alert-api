@@ -25,3 +25,30 @@ export const convertPrismaAlertToDto = (
   currency: alert.currencyData.symbol,
   createdAt: alert.createdAt,
 });
+
+export function convertDeletedAlertToDto(
+  alert: Prisma.AlertGetPayload<{
+    include: {
+      cryptoData: {
+        select: {
+          name: true;
+        };
+      };
+      currencyData: {
+        select: {
+          symbol: true;
+        };
+      };
+    };
+  }>,
+): GetUserAlertsDto {
+  const xd = alert;
+  return {
+    id: alert.id,
+    email: alert.userEmail,
+    crypto: alert.cryptoData.name,
+    price: alert.price,
+    currency: alert.currencyData.symbol,
+    createdAt: alert.createdAt,
+  };
+}

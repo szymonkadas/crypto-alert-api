@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from 'src/prisma.service';
-import { convertPrismaAlertToDto } from './dto/GetAlerts.dto';
+import {
+  convertDeletedAlertToDto,
+  convertPrismaAlertToDto,
+} from './dto/GetAlerts.dto';
 import { CreateAlertDto } from './dto/createAlert.dto';
 
 @Injectable()
@@ -31,9 +34,12 @@ export class AlertsService {
           error instanceof PrismaClientKnownRequestError &&
           error.code === 'P2002'
         ) {
-          throw new ConflictException('Alert already exists');
+          throw new ConflictException(error, 'Alert already exists');
         }
-        throw new InternalServerErrorException();
+        throw new InternalServerErrorException(
+          error,
+          'Database connection error',
+        );
       });
   }
 
@@ -52,6 +58,34 @@ export class AlertsService {
       .then((data) =>
         data.map((dataRecord) => convertPrismaAlertToDto(dataRecord)),
       )
+      .catch((error) => {
+        throw new InternalServerErrorException(
+          error,
+          'Database connection error',
+        );
+      });
+  }
+
+  delete(alertId: string) {
+    return this.prisma.alert
+      .delete({
+        where: {
+          id: alertId,
+        },
+        include: {
+          cryptoData: {
+            select: {
+              name: true,
+            },
+          },
+          currencyData: {
+            select: {
+              symbol: true,
+            },
+          },
+        },
+      })
+      .then((data) => convertDeletedAlertToDto(data))
       .catch((error) => {
         throw new InternalServerErrorException(
           error,
