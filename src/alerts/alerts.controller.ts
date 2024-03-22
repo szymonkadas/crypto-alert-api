@@ -4,12 +4,11 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
-  InternalServerErrorException,
   Param,
   Post,
 } from '@nestjs/common';
 import { isEmail } from 'class-validator';
+import handleException from 'src/utils/controllers/handleException';
 import { AlertsService } from './alerts.service';
 import { CreateAlertDto } from './dto/createAlert.dto';
 
@@ -27,7 +26,7 @@ export class AlertsController {
       const result = await this.AlertsService.get(userEmail);
       return result;
     } catch (error) {
-      return await this.handleException(error);
+      return handleException(error);
     }
   }
 
@@ -43,7 +42,7 @@ export class AlertsController {
     try {
       return await this.AlertsService.create(userEmail, dto);
     } catch (error) {
-      return this.handleException(error);
+      return handleException(error);
     }
   }
 
@@ -52,7 +51,7 @@ export class AlertsController {
     try {
       await this.AlertsService.delete(id);
     } catch (error) {
-      return this.handleException(error);
+      return handleException(error);
     }
     return { success: true };
   }
@@ -66,16 +65,5 @@ export class AlertsController {
       );
     }
     return null;
-  }
-
-  // Handles exceptions according to their type.
-  async handleException<t extends HttpException | Error>(error: t) {
-    if (error instanceof HttpException) {
-      return error;
-    }
-    return new InternalServerErrorException(
-      undefined,
-      error.message || 'Internal server error',
-    );
   }
 }

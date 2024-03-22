@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '@sendgrid/mail';
 import { AlertDto } from 'src/alerts/dto/GetAlerts.dto';
@@ -77,9 +77,10 @@ export class SendgridService {
         return `SENT the ${description || 'custom'} message: ${msg.subject}`;
       })
       .catch((error) => {
-        const errorMessage = `Failed to send mail message ${msg.subject}, ERROR: ${error}`;
-        console.error(errorMessage, error);
-        return errorMessage;
+        throw new ServiceUnavailableException(
+          error,
+          `Failed to send mail message ${msg.subject}`,
+        );
       });
   }
 }

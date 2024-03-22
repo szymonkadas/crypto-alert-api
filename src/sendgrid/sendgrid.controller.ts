@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { AlertDto } from 'src/alerts/dto/GetAlerts.dto';
+import handleException from 'src/utils/controllers/handleException';
 import { SendgridService, sendgridMessageConfig } from './sendgrid.service';
 @Controller('mail')
 export class SendgridController {
@@ -20,10 +21,14 @@ export class SendgridController {
     @Param('userEmail') userEmail,
     @Body() alertData: Omit<AlertDto, 'id' | 'createdAt' | 'email'>,
   ) {
-    return await this.sendgridService.sendCreateAlert({
-      email: userEmail,
-      ...alertData,
-    });
+    try {
+      return await this.sendgridService.sendCreateAlert({
+        email: userEmail,
+        ...alertData,
+      });
+    } catch (error) {
+      return handleException(error);
+    }
   }
 
   // sending price reached alert mail
@@ -32,10 +37,14 @@ export class SendgridController {
     @Param('userEmail') userEmail: string,
     @Body() alertData: Omit<AlertDto, 'id' | 'createdAt' | 'email'>,
   ) {
-    return await this.sendgridService.sendAlertPriceReached({
-      email: userEmail,
-      ...alertData,
-    });
+    try {
+      return await this.sendgridService.sendAlertPriceReached({
+        email: userEmail,
+        ...alertData,
+      });
+    } catch (error) {
+      return handleException(error);
+    }
   }
 
   // though it's not proper to pass more data than alert's id and email, it uses data that would be fetched from db, because this endpoint isn't meant to be used anywhere besides test env.
@@ -45,9 +54,13 @@ export class SendgridController {
     @Param('userEmail') userEmail: string,
     @Body() alertData: Omit<AlertDto, 'id' | 'createdAt' | 'email'>,
   ) {
-    return await this.sendgridService.deletionOfAlert({
-      email: userEmail,
-      ...alertData,
-    });
+    try {
+      return await this.sendgridService.deletionOfAlert({
+        email: userEmail,
+        ...alertData,
+      });
+    } catch (error) {
+      return handleException(error);
+    }
   }
 }
