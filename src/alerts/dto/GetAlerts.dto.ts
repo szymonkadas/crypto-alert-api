@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 
-export type GetUserAlertsDto = {
+export type AlertDto = {
   email: string;
   id: string;
   crypto: string;
@@ -17,7 +17,7 @@ export const convertPrismaAlertToDto = (
       currencyData: true;
     };
   }>,
-): GetUserAlertsDto => ({
+): AlertDto => ({
   email: alert.user.email,
   id: alert.id,
   crypto: alert.cryptoData.name,
@@ -41,7 +41,7 @@ export function convertDeletedAlertToDto(
       };
     };
   }>,
-): GetUserAlertsDto {
+): AlertDto {
   const xd = alert;
   return {
     id: alert.id,

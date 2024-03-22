@@ -1,19 +1,13 @@
-import { HttpService } from '@nestjs/axios';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { CacheStore, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '@sendgrid/mail';
-import { PrismaService } from 'src/prisma.service';
+import { AlertDto } from 'src/alerts/dto/GetAlerts.dto';
 import MessageTemplate from 'src/utils/sendgrid/MessageTemplate';
-import verifyUser from 'src/utils/user/verifyUser';
 @Injectable()
 export class SendgridService {
   senderMail: string;
   constructor(
     private configService: ConfigService,
-    private httpService: HttpService,
-    private prisma: PrismaService,
-    @Inject(CACHE_MANAGER) private cacheManager: CacheStore,
     private mailService: MailService,
   ) {
     this.mailService.setApiKey(this.configService.get('SENDGRID_API_KEY'));
@@ -21,11 +15,8 @@ export class SendgridService {
   }
 
   // prolly will take crypto name and price info as arguments i suppose?
-  async sendCreateAlert(
-    userEmail: string,
-    alertData: { price: number; currency: string; crypto: string },
-  ) {
-    verifyUser(userEmail);
+  async sendCreateAlert(alertData: Omit<AlertDto, 'id' | 'createdAt'>) {
+    // verifyUser(userEmail); not needed if we're using it only in alerts controller.
     // create message
     const message = new MessageTemplate(
       `ALERT: ${alertData.crypto}`,
@@ -33,34 +24,38 @@ export class SendgridService {
     );
     // send notification
     return this.sendMail(
-      userEmail,
+      alertData.email,
       message.formatToMessageConfig(),
       'CREATION',
     );
   }
 
-  async sendAlertPriceReached(userEmail: string, alertId: string) {
-    verifyUser(userEmail);
+  async sendAlertPriceReached(alertData: Omit<AlertDto, 'id' | 'createdAt'>) {
+    // verifyUser(userEmail); not needeed if we're using it only in alerts controller.
     // fetch alert from db OR take it as argument, gotta decide
     // create message
     const message = new MessageTemplate(
-      `ALERT: {alert.crypto}`,
-      'ALERT: {alert.crypto} has reached {alert.price}{alert.currency}!',
-    );
-    // send notification
-    return this.sendMail(userEmail, message.formatToMessageConfig(), 'ALERT');
-  }
-
-  async deletionOfAlert(userEmail: string, alertId: string) {
-    verifyUser(userEmail);
-    // create message
-    const message = new MessageTemplate(
-      `ALERT: {alert.crypto}`,
-      'DELETED: {alert.crypto} alert with price set to {alert.price}{alert.currency} has been deleted!',
+      `ALERT: ${alertData.crypto}`,
+      `ALERT: ${alertData.crypto} has reached ${alertData.price}${alertData.currency}!`,
     );
     // send notification
     return this.sendMail(
-      userEmail,
+      alertData.email,
+      message.formatToMessageConfig(),
+      'ALERT',
+    );
+  }
+
+  async deletionOfAlert(alertData: Omit<AlertDto, 'id' | 'createdAt'>) {
+    // verifyUser(userEmail); not needed if we're using it only in alerts controller.
+    // create message
+    const message = new MessageTemplate(
+      `ALERT: ${alertData.crypto}`,
+      `DELETED: ${alertData.crypto} alert with price set to ${alertData.price}${alertData.currency} has been deleted!`,
+    );
+    // send notification
+    return this.sendMail(
+      alertData.email,
       message.formatToMessageConfig(),
       'DELETION',
     );

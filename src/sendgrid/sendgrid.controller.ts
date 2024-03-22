@@ -1,11 +1,12 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { AlertDto } from 'src/alerts/dto/GetAlerts.dto';
 import { SendgridService, sendgridMessageConfig } from './sendgrid.service';
 @Controller('mail')
 export class SendgridController {
   constructor(private readonly sendgridService: SendgridService) {}
 
   // Sending email
-  @Post('/:userEmail/send')
+  @Post('/:userEmail/message')
   async sendMail(
     @Param('userEmail') userEmail: string,
     @Body() message: sendgridMessageConfig,
@@ -17,26 +18,36 @@ export class SendgridController {
   @Post('/:userEmail/create')
   async sendCreateAlert(
     @Param('userEmail') userEmail,
-    @Body() alertData: { price: number; currency: string; crypto: string },
+    @Body() alertData: Omit<AlertDto, 'id' | 'createdAt' | 'email'>,
   ) {
-    return await this.sendgridService.sendCreateAlert(userEmail, alertData);
+    return await this.sendgridService.sendCreateAlert({
+      email: userEmail,
+      ...alertData,
+    });
   }
 
   // sending price reached alert mail
-  @Get('/:userEmail/alert/:alertId')
+  @Get('/:userEmail/fire')
   async sendAlertPriceReached(
     @Param('userEmail') userEmail: string,
-    @Param('alertId') alertId: string,
+    @Body() alertData: Omit<AlertDto, 'id' | 'createdAt' | 'email'>,
   ) {
-    return await this.sendgridService.sendAlertPriceReached(userEmail, alertId);
+    return await this.sendgridService.sendAlertPriceReached({
+      email: userEmail,
+      ...alertData,
+    });
   }
 
-  // sending delete alert mail => for testing purposes used only in alerts controller
-  @Delete('/:userEmail/delete/:alertId')
+  // though it's not proper to pass more data than alert's id and email, it uses data that would be fetched from db, because this endpoint isn't meant to be used anywhere besides test env.
+  // sending delete alert mail => for testing purposes used only in alerts controller (maybe we'll go back to the prev version and fetch data from db here, gotta decide when will start testing)
+  @Delete('/:userEmail/delete')
   async deletionOfAlert(
     @Param('userEmail') userEmail: string,
-    @Param('alertId') alertId: string,
+    @Body() alertData: Omit<AlertDto, 'id' | 'createdAt' | 'email'>,
   ) {
-    return await this.sendgridService.deletionOfAlert(userEmail, alertId);
+    return await this.sendgridService.deletionOfAlert({
+      email: userEmail,
+      ...alertData,
+    });
   }
 }

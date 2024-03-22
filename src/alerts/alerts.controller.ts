@@ -12,7 +12,7 @@ import {
 import { isEmail } from 'class-validator';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { AlertsService } from './alerts.service';
-import { GetUserAlertsDto } from './dto/GetAlerts.dto';
+import { AlertDto } from './dto/GetAlerts.dto';
 import { CreateAlertDto } from './dto/createAlert.dto';
 
 @Controller('alerts')
@@ -39,7 +39,7 @@ export class AlertsController {
     @Body() dto: CreateAlertDto,
   ) {
     await this.validateEmail(userEmail);
-    let result: undefined | GetUserAlertsDto;
+    let result: undefined | AlertDto;
     try {
       result = await this.AlertsService.create(userEmail, dto);
     } catch (error) {
@@ -52,7 +52,7 @@ export class AlertsController {
 
   @Delete('/:id')
   async delete(@Param('id') id: string) {
-    let result: undefined | GetUserAlertsDto;
+    let result: undefined | AlertDto;
     try {
       result = await this.AlertsService.delete(id);
     } catch (error) {
@@ -84,17 +84,11 @@ export class AlertsController {
     );
   }
 
-  async sendEmailIfAlertCreated(result: GetUserAlertsDto) {
-    if (result)
-      await this.SendgridService.sendCreateAlert(result.email, {
-        price: result.price,
-        currency: result.currency,
-        crypto: result.crypto,
-      });
+  async sendEmailIfAlertCreated(result: AlertDto) {
+    if (result) await this.SendgridService.sendCreateAlert(result);
   }
 
-  async sendEmailIfAlertDeleted(result: GetUserAlertsDto) {
-    if (result)
-      await this.SendgridService.deletionOfAlert(result.email, result.id);
+  async sendEmailIfAlertDeleted(result: AlertDto) {
+    if (result) await this.SendgridService.deletionOfAlert(result);
   }
 }
