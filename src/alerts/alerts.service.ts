@@ -5,7 +5,9 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from 'src/prisma.service';
+import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import {
+  AlertDto,
   convertDeletedAlertToDto,
   convertPrismaAlertToDto,
 } from './dto/GetAlerts.dto';
@@ -13,10 +15,13 @@ import { CreateAlertDto } from './dto/createAlert.dto';
 
 @Injectable()
 export class AlertsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private sendgrid: SendgridService,
+  ) {}
 
-  create(userEmail: string, data: CreateAlertDto) {
-    return this.prisma.alert
+  async create(userEmail: string, data: CreateAlertDto) {
+    const result = await this.prisma.alert
       .create({
         data: {
           userEmail,
@@ -41,9 +46,15 @@ export class AlertsService {
           'Database connection error',
         );
       });
+    try {
+      this.sendEmailOnDelete(result);
+    } catch (error) {
+      throw new InternalServerErrorException(error, 'Email sending error');
+    }
+    return result;
   }
 
-  get(userEmail: string) {
+  async get(userEmail: string) {
     return this.prisma.alert
       .findMany({
         where: {
@@ -66,8 +77,8 @@ export class AlertsService {
       });
   }
 
-  delete(alertId: string) {
-    return this.prisma.alert
+  async delete(alertId: string) {
+    const result = await this.prisma.alert
       .delete({
         where: {
           id: alertId,
@@ -92,5 +103,19 @@ export class AlertsService {
           'Database connection error',
         );
       });
+    try {
+      this.sendEmailOnDelete(result);
+    } catch (error) {
+      throw new InternalServerErrorException(error, 'Email sending error');
+    }
+    return result;
+  }
+
+  async sendEmailOnCreate(result: AlertDto) {
+    await this.sendgrid.sendCreateAlert(result);
+  }
+
+  async sendEmailOnDelete(result: AlertDto) {
+    await this.sendgrid.deletionOfAlert(result);
   }
 }
