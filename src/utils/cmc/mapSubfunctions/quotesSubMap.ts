@@ -1,5 +1,5 @@
 export function quotesSubMap(
-  subdata: QuotesData & { id: string },
+  subdata: QuotesData & { id: number },
 ): QuotesMapRecord {
   return [
     subdata.id,
@@ -13,7 +13,7 @@ export function quotesSubMap(
 
 export type QuotesData = {
   name: string;
-  quote: { string: { price: number } };
+  quote: { [key: string]: { price: number } };
   last_updated: string;
 };
-export type QuotesMapRecord = [string, QuotesData];
+export type QuotesMapRecord = [number, QuotesData];

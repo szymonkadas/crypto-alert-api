@@ -5,6 +5,7 @@ export type AlertDto = {
   id: string;
   crypto: string;
   price: number;
+  // symbol, not name!
   currency: string;
   createdAt: Date;
 };

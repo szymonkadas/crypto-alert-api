@@ -15,4 +15,4 @@ type FiatData = {
   id: number;
 };
 
-export type FiatMapRecord = [string, FiatData][];
+export type FiatMapRecord = [string, FiatData];

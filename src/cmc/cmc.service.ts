@@ -3,7 +3,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CacheStore, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
-import { map } from 'rxjs';
+import { firstValueFrom, map } from 'rxjs';
 import { PrismaService } from 'src/prisma.service';
 import {
   CacheKeys,
@@ -20,7 +20,10 @@ import {
   FiatMapRecord,
   fiatSubMap,
 } from 'src/utils/cmc/mapSubfunctions/fiatSubMap';
-import { quotesSubMap } from 'src/utils/cmc/mapSubfunctions/quotesSubMap';
+import {
+  QuotesMapRecord,
+  quotesSubMap,
+} from 'src/utils/cmc/mapSubfunctions/quotesSubMap';
 import updateDbMapController from 'src/utils/cmc/updateDbMapController';
 @Injectable()
 export class CmcService {
@@ -32,7 +35,10 @@ export class CmcService {
   ) {}
 
   // get latest quotes from cmc, if no idList is passed, returns all quotes. Use fiatIdList with caution (100/200 cryptos for 1 point + 1 point for each convert_id (except for first one)!)
-  async getQuotesData(idList?: string, fiatIdList?: string) {
+  async getQuotesData(
+    idList?: string,
+    fiatIdList?: string,
+  ): Promise<QuotesMapRecord[]> {
     const headers = {
       'X-CMC_PRO_API_KEY': this.configService.get('TEST_CRYPTO_API_KEY'),
     };
@@ -45,43 +51,36 @@ export class CmcService {
     const endpoint = idList
       ? '/v2/cryptocurrency/quotes/latest'
       : '/v1/cryptocurrency/listings/latest';
-    // get data from cache (maybe will work later only with crons and get data only from cache?)
-    const data = await this.cacheManager.get(CacheKeys.QuotesData);
+
+    const data: QuotesMapRecord[] = await this.cacheManager.get(
+      CacheKeys.QuotesData,
+    );
     if (data) {
       return data;
     }
-    // if cache not available:
     try {
-      const response = await this.httpService
+      const response = this.httpService
         .get(`${this.configService.get('TEST_CRYPTO_API_URL')}${endpoint}`, {
           headers,
           params,
         })
         .pipe(
-          map(async (response) => {
+          map((response) => {
             // map data
             const mappedResponse = mapData(
               Object.values(response.data.data),
               quotesSubMap,
             );
-            // save data in cache
-            try {
-              this.cacheManager.set(
-                CacheKeys.QuotesData,
-                mappedResponse,
-                1000000,
-              );
-            } catch (e) {
-              console.log(`${CacheKeys.QuotesData} update failed`, e);
-            }
-            // return
+            // save data in cache.
+            this.cacheManager.set(CacheKeys.QuotesData, mappedResponse, 240000);
             return mappedResponse;
           }),
         );
-      return response;
+
+      return await firstValueFrom(response);
     } catch (error) {
       console.error(error);
-      return error;
+      throw error;
     }
   }
 
@@ -132,7 +131,7 @@ export class CmcService {
         .pipe(
           map(async (response) => {
             // map data
-            const mappedResponse: FiatMapRecord | CryptoMapRecord =
+            const mappedResponse: FiatMapRecord[] | CryptoMapRecord[] =
               enumKey === DbMapEnumKeys.Crypto
                 ? await mapData(response.data.data, cryptoSubMap)
                 : await mapData(response.data.data, fiatSubMap);
@@ -146,12 +145,12 @@ export class CmcService {
             } catch (e) {
               console.log(`${CacheKeys[enumKey]} db update failed`, e);
             }
-            // save data in cache
+            // save data in cache for one hour
             try {
               this.cacheManager.set(
                 CacheKeys[enumKey],
                 mappedResponse,
-                1000000,
+                3600000,
               );
             } catch (e) {
               console.log(`${CacheKeys[enumKey]} cache update failed`, e);
@@ -167,7 +166,7 @@ export class CmcService {
     }
   }
 
-  // fetching map from db in it's raw form (not mapped) and caching it. (use on init?)
+  // fetching map from db in it's raw form (not mapped) and caching it.
   @Cron('0 */5 * * *')
   async cacheMapFromDb(mapId: DbMapEnumKeys) {
     try {
