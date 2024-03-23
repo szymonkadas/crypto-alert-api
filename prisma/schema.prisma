@@ -11,12 +11,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// I dunno if it's not reundant, we've got CryptoData serving as a map, but what is cryptocurrency for?
-model Cryptocurrency {
-  id   Int   @id @map("_id")
-  name String 
-}
-
 // Storing map of fiat
 model  FiatData {
   id      Int   @id @map("_id")

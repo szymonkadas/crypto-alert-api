@@ -20,7 +20,7 @@ export class CmcController {
   // Provides quotes (default USD if fiatIdList not provided) for cryptocurrencies.
   @Get('/data')
   async getQuotesData(
-    @Query('id') idList: string,
+    @Query('id') idList?: string,
     @Query('convert_id') fiatIdList?: string,
   ) {
     return await this.cmcService.getQuotesData(idList, fiatIdList);

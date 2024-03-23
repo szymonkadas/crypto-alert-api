@@ -35,7 +35,10 @@ export class SendgridController {
   @Get('/:userEmail/fire')
   async sendAlertPriceReached(
     @Param('userEmail') userEmail: string,
-    @Body() alertData: Omit<AlertDto, 'id' | 'createdAt' | 'email'>,
+    @Body()
+    alertData: Omit<AlertDto, 'id' | 'createdAt' | 'email'> & {
+      currentPrice: number;
+    },
   ) {
     try {
       return await this.sendgridService.sendAlertPriceReached({

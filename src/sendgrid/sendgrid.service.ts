@@ -30,13 +30,15 @@ export class SendgridService {
     );
   }
 
-  async sendAlertPriceReached(alertData: Omit<AlertDto, 'id' | 'createdAt'>) {
+  async sendAlertPriceReached(
+    alertData: Omit<AlertDto, 'id' | 'createdAt'> & { currentPrice: number },
+  ) {
     // verifyUser(userEmail); not needeed if we're using it only in alerts controller.
     // fetch alert from db OR take it as argument, gotta decide
     // create message
     const message = new MessageTemplate(
       `ALERT: ${alertData.crypto}`,
-      `ALERT: ${alertData.crypto} has reached ${alertData.price}${alertData.currency}!`,
+      `ALERT: ${alertData.crypto} has reached ${alertData.price} ${alertData.currency}! It's price at the moment was: ${alertData.currentPrice} ${alertData.currency}.`,
     );
     // send notification
     return this.sendMail(

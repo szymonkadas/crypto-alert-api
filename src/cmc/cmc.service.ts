@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CacheStore, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import { map } from 'rxjs';
 import { PrismaService } from 'src/prisma.service';
 import {
@@ -30,15 +31,20 @@ export class CmcService {
     @Inject(CACHE_MANAGER) private cacheManager: CacheStore,
   ) {}
 
-  async getQuotesData(idList: string, fiatIdList?: string) {
+  // get latest quotes from cmc, if no idList is passed, returns all quotes. Use fiatIdList with caution (100/200 cryptos for 1 point + 1 point for each convert_id (except for first one)!)
+  async getQuotesData(idList?: string, fiatIdList?: string) {
     const headers = {
       'X-CMC_PRO_API_KEY': this.configService.get('TEST_CRYPTO_API_KEY'),
     };
-    const params = {
-      id: idList,
-      convert_id: fiatIdList,
-    };
-    const endpoint = '/v2/cryptocurrency/quotes/latest';
+    const params = idList
+      ? {
+          id: idList,
+          convert_id: fiatIdList,
+        }
+      : { convert_id: fiatIdList };
+    const endpoint = idList
+      ? '/v2/cryptocurrency/quotes/latest'
+      : '/v1/cryptocurrency/listings/latest';
     // get data from cache (maybe will work later only with crons and get data only from cache?)
     const data = await this.cacheManager.get(CacheKeys.QuotesData);
     if (data) {
@@ -107,7 +113,8 @@ export class CmcService {
     return response;
   }
 
-  // updates map in db. Cron maybe?
+  // updates map of all available fiats/cryptos from api and saves it in db. (once a day every midnight) (id & name of fiats/cryptos are stored in db)
+  @Cron('0 0 */1 * *')
   async updateDbMap(enumKey: DbMapEnumKeys) {
     const headers = {
       'X-CMC_PRO_API_KEY': this.configService.get('TEST_CRYPTO_API_KEY'),
@@ -161,11 +168,20 @@ export class CmcService {
   }
 
   // fetching map from db in it's raw form (not mapped) and caching it. (use on init?)
-  async cacheMapFromDb(mapId: PrismaMapModels) {
+  @Cron('0 */5 * * *')
+  async cacheMapFromDb(mapId: DbMapEnumKeys) {
     try {
-      const fetchedData = await this.prisma[mapId].findMany({});
-      // save mapData in cache for 1000 seconds, prolly will change lifespan
-      this.cacheManager.set(mapId, fetchedData, 1000000);
+      const fetchedData = await this.prisma[PrismaMapModels[mapId]].findMany(
+        {},
+      );
+      // save mapData in cache for 6 minutes. (1 additional minute to be safe)
+      this.cacheManager.set(
+        CacheKeys[mapId],
+        mapId === DbMapEnumKeys.Crypto
+          ? await mapData(fetchedData, cryptoSubMap)
+          : await mapData(fetchedData, fiatSubMap),
+        360000,
+      );
       return fetchedData;
     } catch (error) {
       console.log(error);
