@@ -13,7 +13,7 @@ import {
   convertDeletedAlertToDto,
   convertPrismaAlertToDto,
 } from './dto/GetAlerts.dto';
-import { CreateAlertDto } from './dto/createAlert.dto';
+import { CreateAlertDto } from './dto/CreateAlert.dto';
 
 @Injectable()
 export class AlertsService {
