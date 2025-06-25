@@ -10,7 +10,7 @@ import {
 import { isEmail } from 'class-validator';
 import handleException from 'src/utils/controllers/handleException';
 import { AlertsService } from './alerts.service';
-import { CreateAlertDto } from './dto/createAlert.dto';
+import { CreateAlertDto } from './dto/CreateAlert.dto';
 
 @Controller('alerts')
 export class AlertsController {
