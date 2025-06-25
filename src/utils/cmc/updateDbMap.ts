@@ -23,6 +23,20 @@ export async function updateDbMap<T extends DBData>(
 ) {
   const responseData = response.data.data;
   const processedData = mapData(responseData, mapFunction);
-  await prismaService[model].deleteMany({});
-  await prismaService[model].createMany({ data: processedData });
+  for (const item of processedData) {
+    const { id, ...dataToUpdate } = item;
+    try {
+      await prismaService[model].upsert({
+        where: { id },
+        update: {
+          ...dataToUpdate,
+        },
+        create: item,
+      });
+    } catch (error) {
+      throw new Error(
+        `Error updating ${model} with data: ${item}. Error: ${error}`,
+      );
+    }
+  }
 }

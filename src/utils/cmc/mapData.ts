@@ -7,6 +7,6 @@ type data = {
 export default function mapData<T>(
   data: data,
   mapFunction: ResponseMapFunc<T>,
-) {
+): T[] {
   return data.map(mapFunction);
 }

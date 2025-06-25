@@ -1,16 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { CmcService } from 'src/cmc/cmc.service';
 import { PrismaService } from 'src/prisma.service';
-import { CmcService } from './cmc.service';
+import { AlertsService } from './alerts.service';
 
-describe('CmcService', () => {
-  let service: CmcService;
+describe('AlertsService', () => {
+  let service: AlertsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CmcService, PrismaService],
+      providers: [AlertsService, CmcService, PrismaService],
     }).compile();
 
-    service = module.get<CmcService>(CmcService);
+    service = module.get<AlertsService>(AlertsService);
   });
 
   it('should be defined', () => {

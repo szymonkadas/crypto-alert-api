@@ -1,16 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from 'src/prisma.service';
-import { CmcService } from './cmc.service';
+import { SendgridService } from './sendgrid.service';
 
-describe('CmcService', () => {
-  let service: CmcService;
+describe('SendgridService', () => {
+  let service: SendgridService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CmcService, PrismaService],
+      providers: [SendgridService],
     }).compile();
 
-    service = module.get<CmcService>(CmcService);
+    service = module.get<SendgridService>(SendgridService);
   });
 
   it('should be defined', () => {

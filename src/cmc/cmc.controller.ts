@@ -8,7 +8,7 @@ import {
   Inject,
   Query,
 } from '@nestjs/common';
-import { DbMapEnumKeys, PrismaMapModels } from 'src/utils/enums';
+import { DbMapEnumKeys, PrismaMapModels } from 'src/utils/cmc/enums';
 import { CmcService } from './cmc.service';
 @Controller('cmc')
 export class CmcController {
@@ -20,7 +20,7 @@ export class CmcController {
   // Provides quotes (default USD if fiatIdList not provided) for cryptocurrencies.
   @Get('/data')
   async getQuotesData(
-    @Query('id') idList: string,
+    @Query('id') idList?: string,
     @Query('convert_id') fiatIdList?: string,
   ) {
     return await this.cmcService.getQuotesData(idList, fiatIdList);
