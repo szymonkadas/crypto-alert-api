@@ -2,7 +2,7 @@ import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '@sendgrid/mail';
 import { AlertDto } from 'src/alerts/dto/GetAlerts.dto';
-import MessageTemplate from 'src/utils/sendgrid/MessageTemplate';
+import MessageTemplate from 'src/utils/sendgrid/sgMessageTemplate';
 @Injectable()
 export class SendgridService {
   senderMail: string;
