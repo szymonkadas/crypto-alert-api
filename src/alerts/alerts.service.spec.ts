@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { CacheModule } from '@nestjs/cache-manager';
+import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
+import { MailService } from '@sendgrid/mail';
 import { CmcService } from 'src/cmc/cmc.service';
 import { PrismaService } from 'src/prisma.service';
+import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { AlertsService } from './alerts.service';
 
 describe('AlertsService', () => {
@@ -8,7 +13,14 @@ describe('AlertsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AlertsService, CmcService, PrismaService],
+      imports: [ConfigModule, HttpModule, CacheModule.register()],
+      providers: [
+        AlertsService,
+        CmcService,
+        PrismaService,
+        SendgridService,
+        MailService,
+      ],
     }).compile();
 
     service = module.get<AlertsService>(AlertsService);
@@ -18,3 +30,4 @@ describe('AlertsService', () => {
     expect(service).toBeDefined();
   });
 });
+

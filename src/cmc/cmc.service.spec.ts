@@ -1,4 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { CacheModule } from '@nestjs/cache-manager';
+import { ConfigService } from '@nestjs/config';
+import { HttpService, HttpModule } from '@nestjs/axios';
 import { PrismaService } from 'src/prisma.service';
 import { CmcService } from './cmc.service';
 
@@ -7,7 +10,8 @@ describe('CmcService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CmcService, PrismaService],
+      imports: [CacheModule.register(), HttpModule],
+      providers: [CmcService, PrismaService, ConfigService],
     }).compile();
 
     service = module.get<CmcService>(CmcService);
@@ -17,3 +21,4 @@ describe('CmcService', () => {
     expect(service).toBeDefined();
   });
 });
+
